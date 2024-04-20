@@ -3,41 +3,12 @@
 <head>
     <title>Custom Cast Receiver</title>
     <!-- Include Cast SDK -->
-    <script type="text/javascript" src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+    <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
 </head>
-<body>
-    <video id="videoPlayer" autoplay controls></video>
-
-    <script>
-        // Initialize CastReceiverContext
-        const context = cast.framework.CastReceiverContext.getInstance();
-        const playerManager = context.getPlayerManager();
-
-        // Setup Video Element
-        const videoElement = document.getElementById('videoPlayer');
-        playerManager.setMediaElement(videoElement);
-
-        // Set up the playback configuration
-        const playbackConfig = new cast.framework.PlaybackConfig();
-        playbackConfig.manifestRequestHandler = requestInfo => {
-            requestInfo.headers['Referer'] = 'https://vidmoly.to';
-        };
-        context.start({ playbackConfig });
-
-        // Handle Load Request
-        playerManager.setMessageInterceptor(
-            cast.framework.messages.MessageType.LOAD,
-            loadRequestData => {
-                const mediaInfo = new chrome.cast.media.MediaInfo(loadRequestData.media.contentId);
-                mediaInfo.contentType = loadRequestData.media.contentType;
-
-                const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                return request;
-            }
-        );
-
-        // Initialize CastReceiverContext
-        context.start();
-    </script>
-</body>
+  <body>
+      <cast-media-player></cast-media-player>
+    <footer>
+      <script src="js/receiver.js"></script>
+    </footer>
+  </body>
 </html>
