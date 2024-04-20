@@ -14,4 +14,17 @@ playbackConfig.segmentRequestHandler = requestInfo => {
     requestInfo.headers['Host'] = url.host;
 };
 
+// Use hls.js for HLS streams
+playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    loadRequestData => {
+        if (loadRequestData.media && loadRequestData.media.contentId) {
+            const hls = new Hls();
+            hls.loadSource(loadRequestData.media.contentId);
+            hls.attachMedia(playerManager.getMediaElement());
+        }
+        return loadRequestData;
+    }
+);
+
 context.start({ playbackConfig });
