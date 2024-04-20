@@ -6,5 +6,8 @@ const playbackConfig = new cast.framework.PlaybackConfig();
 playbackConfig.manifestRequestHandler = requestInfo => {
     requestInfo.headers['Referer'] = 'https://vidmoly.to';
 };
+playbackConfig.segmentRequestHandler = requestInfo => {
+    requestInfo.headers['Referer'] = 'https://vidmoly.to';
+};
 
 context.start({ playbackConfig });
