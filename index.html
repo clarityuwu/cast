@@ -17,19 +17,19 @@
         const videoElement = document.getElementById('videoPlayer');
         playerManager.setMediaElement(videoElement);
 
+        // Set up the playback configuration
+        const playbackConfig = new cast.framework.PlaybackConfig();
+        playbackConfig.manifestRequestHandler = requestInfo => {
+            requestInfo.headers['Referer'] = 'https://vidmoly.to';
+        };
+        context.start({ playbackConfig });
+
         // Handle Load Request
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             loadRequestData => {
                 const mediaInfo = new chrome.cast.media.MediaInfo(loadRequestData.media.contentId);
                 mediaInfo.contentType = loadRequestData.media.contentType;
-
-                // Set custom headers
-                mediaInfo.customData = {
-                    headers: {
-                        'Referer': 'https://vidmoly.to'
-                    }
-                };
 
                 const request = new chrome.cast.media.LoadRequest(mediaInfo);
                 return request;
