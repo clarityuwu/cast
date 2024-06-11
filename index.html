@@ -2,7 +2,6 @@
 <html>
 <head>
 <meta charset="utf-8">
-<!-- include CAF & your own player library -->
 <style type="text/css">
 html, body, video { /* fit the player to the screen's dimensions */
     margin: 0;
@@ -14,6 +13,7 @@ html, body, video { /* fit the player to the screen's dimensions */
 .loader { /* primitive text-based loading indicator */
     position: absolute;
     inset: 0;
+    display: flex;
     justify-content: center;
     align-content: center;
     font-size: 50px;
@@ -69,7 +69,11 @@ playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, ev
     // Extract media URL and set the loading status
     const mediaUrl = event.media.entity;
 
-    if (!mediaUrl) {
+    // Check for custom data flag
+    const customData = event.media.customData;
+    const isReadyToStream = customData && customData.readyToStream;
+
+    if (!isReadyToStream) {
         setStatus({ isWaiting: true });
         return new Promise(resolve => {
             const checkMetadataInterval = setInterval(() => {
