@@ -103,10 +103,11 @@ playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, ev
             hls.attachMedia(videoElement);
             hls.on(Hls.Events.MEDIA_ATTACHED, () => {
                 hls.loadSource(mediaUrl);
-                videoElement.play();
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoElement.play();
+                    resolve(event);
+                });
             });
-
-            hls.on(Hls.Events.MANIFEST_PARSED, () => resolve(event));
 
             hls.on(Hls.Events.ERROR, (e, data) => {
                 if (!data.fatal) return;
@@ -131,15 +132,19 @@ playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, ev
             // Handle standard MP4 stream
             videoElement.src = mediaUrl;
             videoElement.load();
-            videoElement.play();
-            resolve(event);
+            videoElement.onloadeddata = () => {
+                videoElement.play();
+                resolve(event);
+            };
         }
     });
 });
 
 // Handle pause and play messages
 const changePlaybackStatus = ({ shouldPlay }) => m => {
-    videoElement[shouldPlay ? 'play' : 'pause']();
+    if (metadataReceived) {
+        videoElement[shouldPlay ? 'play' : 'pause']();
+    }
     playerManager.broadcastStatus(true);
     return m;
 };
