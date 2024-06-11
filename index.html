@@ -18,24 +18,40 @@ html, body, video { /* fit the player to the screen's dimensions */
     align-content: center;
     font-size: 50px;
 }
+.waiting { /* primitive text-based waiting indicator */
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
+}
 </style>
 </head>
 <body>
 <div class="loader">Loading...</div>
+<div class="waiting">Waiting for metadata...</div>
 <video controls></video>
 <script type="application/javascript">
 const context = cast.framework.CastReceiverContext.getInstance();
 const playerManager = context.getPlayerManager();
 const videoElement = document.querySelector('video');
 let hls; // static instance of hls.js (destroyed when playing another media is requested)
+let metadataReceived = false;
 
 // Function to set the loading status and error messages
-const setStatus = ({ isLoading, error }) => {
+const setStatus = ({ isLoading, error, isWaiting }) => {
     const loader = document.querySelector('.loader');
+    const waiting = document.querySelector('.waiting');
     if (isLoading) {
         loader.style.display = 'flex';
+        waiting.style.display = 'none';
+    } else if (isWaiting) {
+        loader.style.display = 'none';
+        waiting.style.display = 'flex';
     } else {
         loader.style.display = 'none';
+        waiting.style.display = 'none';
     }
     if (error) {
         loader.textContent = error;
@@ -52,6 +68,21 @@ playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, ev
 
     // Extract media URL and set the loading status
     const mediaUrl = event.media.entity;
+
+    if (!mediaUrl) {
+        setStatus({ isWaiting: true });
+        return new Promise(resolve => {
+            const checkMetadataInterval = setInterval(() => {
+                if (metadataReceived) {
+                    clearInterval(checkMetadataInterval);
+                    setStatus({ isWaiting: false });
+                    resolve(event);
+                }
+            }, 1000);
+        });
+    }
+
+    metadataReceived = true;
     setStatus({ isLoading: true });
 
     // Return a promise to handle the loading process
@@ -127,7 +158,7 @@ context.start(options);
 
 // Add a listener to update the loading status when the context is ready
 context.addEventListener(cast.framework.system.EventType.READY, () => {
-    setStatus({ isLoading: false });
+    setStatus({ isLoading: false, isWaiting: !metadataReceived });
 });
 </script>
 </body>
