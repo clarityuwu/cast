@@ -18,11 +18,10 @@ playbackConfig.segmentRequestHandler = requestInfo => {
 playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     loadRequestData => {
-        const media = loadRequestData.media;
-        if (media && media.contentId && media.contentId.includes('vidmoly')) {
+        if (loadRequestData.media && loadRequestData.media.contentId && loadRequestData.media.contentId.includes('vidmoly')) {
             const hls = new Hls();
             const videoElement = document.getElementsByTagName('video')[0];
-            hls.loadSource(media.contentId);
+            hls.loadSource(loadRequestData.media.contentId);
             hls.attachMedia(videoElement);
             playerManager.stop();
         }
