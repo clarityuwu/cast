@@ -29,7 +29,7 @@ const playerManager = context.getPlayerManager();
 const videoElement = document.querySelector('video');
 let hls; // static instance of hls.js (destroyed when playing another media is requested)
 
-// For brevity, all the code handling the `.loader` element is stripped.
+// Function to set the loading status and error messages
 const setStatus = ({ isLoading, error }) => {
     const loader = document.querySelector('.loader');
     if (isLoading) {
@@ -47,28 +47,24 @@ videoElement.addEventListener('loadeddata', () => setStatus({ isLoading: false }
 
 // Intercept loading requests.
 playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, event => {
-    if (!event.media.entity) // legacy
+    if (!event.media.entity) // legacy support
         event.media.entity = event.media.contentId;
-    // event.media.entity contains the user-defined URL to load.
 
-    const reqId = event.requestId, sender = event.senderId;
+    // Extract media URL and set the loading status
+    const mediaUrl = event.media.entity;
     setStatus({ isLoading: true });
 
-    // Return a promise 
+    // Return a promise to handle the loading process
     return new Promise((resolve, reject) => {
-        // Destroy any pre-existing player.
+        // Destroy any pre-existing player instance
         if (hls) {
             hls.destroy();
             hls = null;
         }
 
-        const mediaUrl = event.media.entity;
-
+        // Handle HLS stream with hls.js
         if (mediaUrl.endsWith('.m3u8')) {
-            // Handle HLS stream with hls.js
             hls = new Hls();
-
-            // Attach Referer header for vidmoly.to
             hls.config.xhrSetup = function(xhr, url) {
                 xhr.setRequestHeader('Referer', 'https://vidmoly.to');
             };
@@ -94,7 +90,7 @@ playerManager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD, ev
                         hls.recoverMediaError();
                         break;
                     default:
-                        playerManager.sendError(sender, reqId, cast.framework.messages.ErrorType.LOAD_FAILED);
+                        playerManager.sendError(event.senderId, event.requestId, cast.framework.messages.ErrorType.LOAD_FAILED);
                         setStatus({ error: 'Unrecoverable error' });
                         hls.destroy();
                         break;
@@ -128,6 +124,11 @@ options.skipPlayersLoad = true;
 options.disableIdleTimeout = true;
 options.supportedCommands = cast.framework.messages.Command.ALL_BASIC_MEDIA;
 context.start(options);
+
+// Add a listener to update the loading status when the context is ready
+context.addEventListener(cast.framework.system.EventType.READY, () => {
+    setStatus({ isLoading: false });
+});
 </script>
 </body>
 </html>
