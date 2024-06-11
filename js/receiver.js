@@ -4,24 +4,27 @@ const playerManager = context.getPlayerManager();
 // Set up the playback configuration
 const playbackConfig = new cast.framework.PlaybackConfig();
 playbackConfig.manifestRequestHandler = requestInfo => {
-    const url = new URL(requestInfo.url);
-    requestInfo.headers['Referer'] = 'https://vidmoly.to';
-    requestInfo.headers['Host'] = url.host;
+    if (requestInfo.url.includes('vidmoly')) {
+        requestInfo.headers['Referer'] = 'https://vidmoly.to';
+    }
 };
 playbackConfig.segmentRequestHandler = requestInfo => {
-    const url = new URL(requestInfo.url);
-    requestInfo.headers['Referer'] = 'https://vidmoly.to';
-    requestInfo.headers['Host'] = url.host;
+    if (requestInfo.url.includes('vidmoly')) {
+        requestInfo.headers['Referer'] = 'https://vidmoly.to';
+    }
 };
 
 // Use hls.js for HLS streams
 playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     loadRequestData => {
-        if (loadRequestData.media && loadRequestData.media.contentId) {
+        const media = loadRequestData.media;
+        if (media && media.contentId && media.contentId.includes('vidmoly')) {
             const hls = new Hls();
-            hls.loadSource(loadRequestData.media.contentId);
-            hls.attachMedia(playerManager.getMediaElement());
+            const videoElement = document.getElementsByTagName('video')[0];
+            hls.loadSource(media.contentId);
+            hls.attachMedia(videoElement);
+            playerManager.stop();
         }
         return loadRequestData;
     }
